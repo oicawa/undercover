@@ -1,0 +1,2 @@
+TestExe.exe/ReadLine TestDll.dll/ReadLine2
+TestExe.exe/Hoge::GetName TestDll.dll/HogeFixed::GetName
