@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 
-#define UC_LOGGER_INI_FILE_PATH "C:\\Investigation.ini"
+#define UC_LOGGER_INI_FILE_PATH ".\\UC.Logger.ini"
 //#define DEBUG_LOG_INV_FILTER _T("DEBUG_LOG_INV")
 
 typedef void(*Logger)(LPCTSTR filter, LPCTSTR message);
