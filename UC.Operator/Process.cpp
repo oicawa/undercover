@@ -1,7 +1,5 @@
 #include "Process.h"
-//#include <atlstr.h>
 #include <winternl.h>
-//#include <libloaderapi.h>
 #include <psapi.h>
 #pragma comment(lib,"psapi.lib")
 
@@ -112,23 +110,37 @@ static DWORD GetRemoteCommandLine(HANDLE hProcess, CString& commandLine)
 	return bytesRead / sizeof(wchar_t);
 }
 
-HRESULT GetProcessInfoListFromProcessNameOrId(LPCTSTR pInputString, std::vector<UCProcessInfo>& processInfoList)
+void AssgineUCProcessInfo(const HANDLE hProcess, const DWORD processId, LPCTSTR pProcessName, UCProcessInfo& processInfo)
 {
-	// Get Process ID if pInputString is number.
-	TCHAR targetProcessName[MAX_PATH];
-	ZeroMemory(targetProcessName, sizeof(targetProcessName));
-	ULONGLONG targetProcessId = 0;
-	if (UCUtils_ConvertToULONGLONG(pInputString, targetProcessId))
+	CString commandLine;
+	GetRemoteCommandLine(hProcess, commandLine);
+
+	processInfo.id = processId;
+	_tcscat_s(processInfo.name, pProcessName);
+	_tcscat_s(processInfo.commandLine, (LPCTSTR)commandLine);
+}
+
+HRESULT GetProcessInfoListFromProcessId(const DWORD processId, std::vector<UCProcessInfo>& processInfoList)
+{
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
+	if (hProcess == NULL)
 	{
-		HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, (DWORD)targetProcessId);
-		GetModuleBaseName(hProcess, nullptr, targetProcessName, sizeof(targetProcessName) / sizeof(TCHAR));
-		CloseHandle(hProcess);
-	}
-	else
-	{
-		_tcscpy_s(targetProcessName, pInputString);
+		UC_LOG(L"Undercover", L"processId=%lu", processId);
+		return E_FAIL;
 	}
 
+	TCHAR targetProcessName[MAX_PATH];
+	ZeroMemory(targetProcessName, sizeof(targetProcessName));
+	GetModuleBaseName(hProcess, nullptr, targetProcessName, sizeof(targetProcessName) / sizeof(TCHAR));
+	CloseHandle(hProcess);
+
+	UCProcessInfo processInfo = { 0 };
+	AssgineUCProcessInfo(hProcess, processId, targetProcessName, processInfo);
+	processInfoList.push_back(processInfo);
+}
+
+HRESULT GetProcessInfoListFromProcessName(LPCTSTR pProcessName, std::vector<UCProcessInfo>& processInfoList)
+{
 	DWORD processIds[1024];
 	ZeroMemory(processIds, sizeof(processIds));
 	DWORD neededSizeOfProcessIds = 0;
@@ -141,29 +153,45 @@ HRESULT GetProcessInfoListFromProcessNameOrId(LPCTSTR pInputString, std::vector<
 	int countOfProcessIds = neededSizeOfProcessIds / sizeof(DWORD);
 	for (int i = 0; i < countOfProcessIds; i++)
 	{
-		HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processIds[i]);
+		//HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processIds[i]);
+		HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processIds[i]);
 		if (hProcess == NULL)
 		{
+			UC_LOG(L"Undercover", L"processId[%d]=%lu", i, processIds[i]);
 			continue;
 		}
 
 		TCHAR processName[MAX_PATH];
 		ZeroMemory(processName, sizeof(processName));
 		GetModuleBaseName(hProcess, nullptr, processName, sizeof(processName) / sizeof(TCHAR));
+		UC_LOG(L"Undercover", L"processId[%d]=%lu, processName=[%s]", i, processIds[i], processName);
 
-		if ((0 < targetProcessId && targetProcessId == processIds[i]) || _tcsicmp(processName, targetProcessName) == 0)
+		if (_tcsicmp(processName, pProcessName) == 0)
 		{
-			CString commandLine;
-			GetRemoteCommandLine(hProcess, commandLine);
 			UCProcessInfo processInfo = { 0 };
-			processInfo.id = processIds[i];
-			_tcscat_s(processInfo.name, targetProcessName);
-			_tcscat_s(processInfo.commandLine, (LPCTSTR)commandLine);
-
+			AssgineUCProcessInfo(hProcess, processIds[i], pProcessName, processInfo);
 			processInfoList.push_back(processInfo);
 		}
 
 		CloseHandle(hProcess);
 	}
+
 	return (processInfoList.size() == 0) ? E_INVALIDARG : S_OK;
+}
+
+HRESULT GetProcessInfoList(LPCTSTR pInputString, std::vector<UCProcessInfo>& processInfoList)
+{
+	// Get Process ID if pInputString is number.
+	ULONGLONG targetProcessId = 0;
+	HRESULT hr = S_OK;
+	if (UCUtils_ConvertToULONGLONG(pInputString, targetProcessId))
+	{
+		hr = GetProcessInfoListFromProcessId(targetProcessId, processInfoList);
+	}
+	else
+	{
+		hr = GetProcessInfoListFromProcessName(pInputString, processInfoList);
+	}
+
+	return hr;
 }

@@ -128,10 +128,13 @@ HRESULT UCTinker_Replace(const std::vector<CString>& parameters, CString& output
 			output.AppendFormat(_T("[NG] line=[%s]\n"), line);
 			continue;
 		}
-		TCHAR orgModuleFullPath[MAX_PATH];
-		ZeroMemory(orgModuleFullPath, sizeof(orgModuleFullPath));
-		GetFullPathName(orgModuleName, MAX_PATH - 1, orgModuleFullPath, nullptr);
-		auto& itOrgModuleInfo = moduleInfoMap.find(orgModuleFullPath);
+
+		CString baseDirectoryPath;
+		UCUtils_GetBaseDirectory(baseDirectoryPath);
+
+		CString orgModuleFullPath;
+		orgModuleFullPath.Format(_T("%s\\%s"), baseDirectoryPath, orgModuleName);
+		auto& itOrgModuleInfo = moduleInfoMap.find(orgModuleFullPath.MakeUpper());
 		if (itOrgModuleInfo == moduleInfoMap.end())
 		{
 			// Not target entry.
@@ -139,10 +142,9 @@ HRESULT UCTinker_Replace(const std::vector<CString>& parameters, CString& output
 			continue;
 		}
 
-		TCHAR newModuleFullPath[MAX_PATH];
-		ZeroMemory(newModuleFullPath, sizeof(newModuleFullPath));
-		GetFullPathName(newModuleName, MAX_PATH - 1, newModuleFullPath, nullptr);
-		auto& itNewModuleInfo = moduleInfoMap.find(newModuleFullPath);
+		CString newModuleFullPath;
+		newModuleFullPath.Format(_T("%s\\%s"), baseDirectoryPath, newModuleName);
+		auto& itNewModuleInfo = moduleInfoMap.find(newModuleFullPath.MakeUpper());
 		if (itNewModuleInfo == moduleInfoMap.end())
 		{
 			// This module should be loaded.

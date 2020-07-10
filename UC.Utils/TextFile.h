@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <atlstr.h>
+#include "..\UC.Logger\UC.Logger.h"
 
 class CTextFile
 {
@@ -23,8 +24,10 @@ public:
 
 	bool Open(LPCTSTR pFilePath)
 	{
+		UC_LOG(L"Undercover", L"pFilePath=[%s]", pFilePath);
 		m_mustFreeFile = true;
 		errno_t error = _tfopen_s(&m_pFile, pFilePath, _T("r"));
+		UC_LOG(L"Undercover", L"error=%d, result of _tfopen_s(&m_pFile, pFilePath, _T(\"r\"))", error);
 		return m_pFile ? true : false;
 	};
 
@@ -40,12 +43,14 @@ public:
 		CString tmpLine;
 		bool result = true;
 		TCHAR buffer[BUFSIZ];
-		size_t count = sizeof(buffer) / sizeof(TCHAR);
+		size_t count = BUFSIZ - 1;
 		bool isTerminatedByNewLine = false;
+		UC_LOG(L"Undercover", L">> while loop (m_pFile=0x%p)", m_pFile);
 		while (true)
 		{
 			memset(buffer, NULL, sizeof(buffer));
 			TCHAR* p = _fgetts(buffer, count, m_pFile);
+			UC_LOG(L"Undercover", L"   p=0x%p, buffer=[%s]", p, buffer);
 			if (p == NULL)
 			{
 				result = false;
@@ -61,9 +66,11 @@ public:
 				break;
 			}
 		}
+		UC_LOG(L"Undercover", L"<< while loop");
 
 		int totalLength = tmpLine.GetLength();
 		line = totalLength == 0 ? _T("") : tmpLine.Mid(0, totalLength - (isTerminatedByNewLine ? 1 : 0));
+		UC_LOG(L"Undercover", L"line=[%s]", line);
 		return result;
 	};
 

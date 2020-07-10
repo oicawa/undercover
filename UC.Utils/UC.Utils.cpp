@@ -85,7 +85,9 @@ void UCUtils_GetModuleInfoList(const HANDLE hProcess, std::map<CString, UCModule
 		GetModuleFileNameEx(hProcess, hModule, ucModuleInfo.path, sizeof(ucModuleInfo.path));
 		UC_LOG(_T("Undercover"), _T("ucModuleInfo.{handle=0x%p, baseAddress=0x%p, name=[%-16s], path=[%s]}"), ucModuleInfo.handle, ucModuleInfo.baseAddress, ucModuleInfo.name, ucModuleInfo.path);
 
-		moduleInfoList[ucModuleInfo.path] = ucModuleInfo;
+		CString key(ucModuleInfo.path);
+		
+		moduleInfoList[key.MakeUpper()] = ucModuleInfo;
 	}
 }
 

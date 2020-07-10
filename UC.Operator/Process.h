@@ -10,4 +10,4 @@ typedef struct {
 	TCHAR commandLine[BUFSIZ];
 } UCProcessInfo;
 
-HRESULT GetProcessInfoListFromProcessNameOrId(LPCTSTR pInputString, std::vector<UCProcessInfo>& processInfoList);
+HRESULT GetProcessInfoList(LPCTSTR pInputString, std::vector<UCProcessInfo>& processInfoList);

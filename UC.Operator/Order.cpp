@@ -7,6 +7,7 @@
 #include <UC.Logger\UC.Logger.h>
 #include <UC.Utils\UC.Utils.h>
 #include <UC.Utils\Pipe.h>
+#include "Privilege.h"
 
 static HRESULT ParseOrderParameters(const std::vector<CString>& parameters, CString& output)
 {
@@ -16,8 +17,11 @@ static HRESULT ParseOrderParameters(const std::vector<CString>& parameters, CStr
 		return E_INVALIDARG;
 	}
 
+	CPrivilege privilege;
+	privilege.Init();
+
 	std::vector<UCProcessInfo> processInfoList;
-	HRESULT hr = GetProcessInfoListFromProcessNameOrId(parameters[0], processInfoList);
+	HRESULT hr = GetProcessInfoList(parameters[0], processInfoList);
 	if (FAILED(hr))
 	{
 		output.Format(_T("Parameter [0](=%s) is not a existing process ID nor process name.\n"), parameters[0]);

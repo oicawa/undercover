@@ -7,6 +7,7 @@
 #include <UC.Logger\UC.Logger.h>
 #include <UC.Utils\UC.Utils.h>
 #include <map>
+#include "Privilege.h"
 
 static HMODULE GetRemoteProcessModuleHandle(HANDLE hProcess, const CString& dllPath)
 {
@@ -19,7 +20,8 @@ static HMODULE GetRemoteProcessModuleHandle(HANDLE hProcess, const CString& dllP
 	std::map<CString, UCModuleInfo> moduleInfoMap;
 	UCUtils_GetModuleInfoList(hProcess, moduleInfoMap);
 	UC_LOG(_T("Undercover"), _T("moduleInfoMap.size()=%Iu"), moduleInfoMap.size());
-	auto& itModuleInfo = moduleInfoMap.find(fullPath);
+	CString key(fullPath);
+	auto& itModuleInfo = moduleInfoMap.find(key.MakeUpper());
 	if (itModuleInfo == moduleInfoMap.end())
 	{
 		UC_LOG(_T("Undercover"), _T("No module which has full path [%s]"), fullPath);
@@ -96,23 +98,28 @@ static HRESULT Attach(const std::vector<CString>& parameters, CString& output)
 		return E_INVALIDARG;
 	}
 
+	CPrivilege privilege;
+	privilege.Init();
+
+	HRESULT hr = S_OK;
+
 	std::vector<UCProcessInfo> processInfoList;
-	HRESULT hr = GetProcessInfoListFromProcessNameOrId(parameters[0], processInfoList);
+	hr = GetProcessInfoList(parameters[0], processInfoList);
 	if (FAILED(hr))
 	{
 		if (hr == E_FAIL)
 		{
-			output.AppendFormat(_T("Parameter [1](=%s) was target process name. But failed to get all process information.\n"), parameters[1]);
+			output.AppendFormat(_T("Parameter [0](=%s) was target process name. But failed to get all process information.\n"), parameters[0]);
 		}
 		else if (hr == E_INVALIDARG)
 		{
-			output.AppendFormat(_T("Parameter [1](=%s) was target process name. But not found the specified process name.\n"), parameters[1]);
+			output.AppendFormat(_T("Parameter [0](=%s) was target process name. But not found the specified process name.\n"), parameters[0]);
 		}
 		else
 		{
-			output.AppendFormat(_T("Unexpected fail. Parameter [1](=%s)\n"), parameters[1]);
+			output.AppendFormat(_T("Unexpected fail. Parameter [0](=%s)\n"), parameters[0]);
 		}
-		return hr;
+		return E_FAIL;
 	}
 
 	for (auto& processInfo : processInfoList)
@@ -212,8 +219,11 @@ static HRESULT Detach(const std::vector<CString>& parameters, CString& output)
 	HANDLE hThread = nullptr;
 	COPYDATASTRUCT copyData = { 0 };
 
+	CPrivilege privilege;
+	privilege.Init();
+
 	std::vector<UCProcessInfo> processInfoList;
-	HRESULT hr = GetProcessInfoListFromProcessNameOrId(parameters[0], processInfoList);
+	HRESULT hr = GetProcessInfoList(parameters[0], processInfoList);
 	if (FAILED(hr))
 	{
 		if (hr == E_FAIL)
