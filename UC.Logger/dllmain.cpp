@@ -10,8 +10,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+	{
+		UCLogger_Initialize(hModule);
 		UCLogger_LoadConfiguration(nullptr);
 		break;
+	}
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:

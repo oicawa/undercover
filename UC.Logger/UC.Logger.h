@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <tchar.h>
 
-#define UC_LOGGER_INI_FILE_PATH ".\\UC.Logger.ini"
 //#define DEBUG_LOG_INV_FILTER _T("DEBUG_LOG_INV")
 
 typedef void(*Logger)(LPCTSTR filter, LPCTSTR message);
@@ -28,6 +27,7 @@ extern "C"
 	__declspec(dllexport) bool UCLogger_IsTargetCaller(LPCTSTR filter, LPCTSTR file, int line, LPCTSTR function);
 	__declspec(dllexport) size_t UCLogger_LoadIniSection(TCHAR* pSectionName, ProcessIniKey pProcessIniKey, void* pContext);
 	__declspec(dllexport) bool UCLogger_LoadConfiguration(LPCTSTR pSectionName);
+	__declspec(dllexport) bool UCLogger_Initialize(HMODULE hModule);
 #ifdef __cplusplus
 }
 #endif

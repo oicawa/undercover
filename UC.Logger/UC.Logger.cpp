@@ -23,10 +23,17 @@
 #include <psapi.h>
 #pragma comment ( lib, "psapi.lib" )
 
+#include <atlstr.h>
+
+static TCHAR g_baseDirectoryPath[MAX_PATH] = { 0 };
+static TCHAR g_iniFilePath[MAX_PATH] = { 0 };
+
 // --------------------------------------------------
 // Definitions
 // --------------------------------------------------
 const size_t LARGE_BUFFER_SIZE = 1024;
+const LPCTSTR UC_LOGGER_INI_FILE_NAME = _T("UC.Logger.ini");
+
 
 #if !defined(_IMAGEHLP_SOURCE_) && defined(_IMAGEHLP64)
 #define StackType DWORD64
@@ -139,7 +146,7 @@ size_t UCLogger_LoadIniSection(TCHAR* pSectionName, ProcessIniKey pProcessIniKey
 {
 	TCHAR buffer[BUFSIZ];
 	ZeroMemory(buffer, sizeof(buffer));
-	DWORD totalLength = GetPrivateProfileString(pSectionName, nullptr, _T(""), buffer, _countof(buffer), _T(UC_LOGGER_INI_FILE_PATH));
+	DWORD totalLength = GetPrivateProfileString(pSectionName, nullptr, _T(""), buffer, _countof(buffer), g_iniFilePath);
 	UC_DEBUG_SELF(_T("totalLength=%lu"), totalLength);
 	if (totalLength == 0)
 	{
@@ -195,13 +202,13 @@ bool UCLogger_IsTarget(LPCTSTR filter)
 	if (UCLogger_WatchIniFileLastUpdated(lastTickCount, lastUpdatedIniFile))
 	{
 		// DbgView Logger
-		bool addDbgView = GetPrivateProfileInt(_T("Output"), _T("DebugView"), 0, _T(UC_LOGGER_INI_FILE_PATH)) == 0 ? false : true;
+		bool addDbgView = GetPrivateProfileInt(_T("Output"), _T("DebugView"), 0, g_iniFilePath) == 0 ? false : true;
 		UCLogger_ManageLogger(OutputDebugStringToDebugView, addDbgView);
 
 		// File Logger
 		TCHAR logFilePath[MAX_PATH];
 		ZeroMemory(logFilePath, sizeof(logFilePath));
-		DWORD length = GetPrivateProfileString(_T("Output"), _T("File"), _T(""), logFilePath, sizeof(logFilePath), _T(UC_LOGGER_INI_FILE_PATH));
+		DWORD length = GetPrivateProfileString(_T("Output"), _T("File"), _T(""), logFilePath, sizeof(logFilePath), g_iniFilePath);
 		bool addFile = (0 < length) ? true : false;
 		UCLogger_ManageLogger(OutputDebugStringToFile, addFile);
 
@@ -370,7 +377,7 @@ bool UCLogger_WatchIniFileLastUpdated(DWORD& lastTickCount, time_t& lastUpdatedI
 static bool LoadConfigurationOutput()
 {
 	// DbgView Logger
-	bool addDbgView = GetPrivateProfileInt(_T("Output"), _T("DebugView"), 0, _T(UC_LOGGER_INI_FILE_PATH)) == 0 ? false : true;
+	bool addDbgView = GetPrivateProfileInt(_T("Output"), _T("DebugView"), 0, g_iniFilePath) == 0 ? false : true;
 	UCLogger_ManageLogger(OutputDebugStringToDebugView, addDbgView);
 	return true;
 }
@@ -398,6 +405,27 @@ static bool LoadConfigurationFilters()
 static bool LoadConfigurationProcesses()
 {
 	return true;
+}
+
+bool UCLogger_Initialize(HMODULE hModule)
+{
+	TCHAR buffer[MAX_PATH];
+	ZeroMemory(buffer, sizeof(buffer));
+	::GetModuleFileName(hModule, buffer, MAX_PATH);
+	
+	TCHAR* pLastOfDirectory = _tcsrchr(buffer, _T('\\'));
+	if (pLastOfDirectory == nullptr)
+	{
+		return false;
+	}
+
+	*pLastOfDirectory = _T('\0');
+
+	ZeroMemory(g_baseDirectoryPath, sizeof(g_baseDirectoryPath));
+	_tcscpy_s(g_baseDirectoryPath, buffer);
+
+	ZeroMemory(g_iniFilePath, sizeof(g_iniFilePath));
+	_stprintf(g_iniFilePath, _T("%s\\%s"), g_baseDirectoryPath, UC_LOGGER_INI_FILE_NAME);
 }
 
 bool UCLogger_LoadConfiguration(LPCTSTR pSectionName)
@@ -456,12 +484,14 @@ static void CleanupSymbols()
 static void InitializeSymbols(HANDLE& process, LPCTSTR filter, DWORD& stackSize)
 {
 	// Read Stack Size
-	stackSize = GetPrivateProfileInt(_T("StackTrace"), _T("Size"), 20, _T(UC_LOGGER_INI_FILE_PATH));
+	stackSize = GetPrivateProfileInt(_T("StackTrace"), _T("Size"), 20, g_iniFilePath);
 
 	// Read Symbol Path
-	char symbolPathA[1024];
+	char symbolPathA[MAX_PATH];
 	ZeroMemory(symbolPathA, sizeof(symbolPathA));
-	GetPrivateProfileStringA("StackTrace", "SymbolPath", "C:\\Symbols", symbolPathA, sizeof(symbolPathA), UC_LOGGER_INI_FILE_PATH);
+	CT2A iniFilePathA(g_iniFilePath);
+	CT2A baseDirectoryPathA(g_baseDirectoryPath);
+	GetPrivateProfileStringA("StackTrace", "SymbolPath", baseDirectoryPathA, symbolPathA, sizeof(symbolPathA), iniFilePathA);
 
 	// Initialize(Load) Symbol files
 	SymInitialize(process, symbolPathA, TRUE);
@@ -499,7 +529,7 @@ bool GetProcessName(LPTSTR pBuffer, size_t countOfBuffer)
 void ManageProcess()
 {
 	ZeroMemory(targetProcessNames, sizeof(targetProcessNames));
-	GetPrivateProfileString(_T("Processes"), _T("Target"), _T(""), targetProcessNames, sizeof(targetProcessNames), _T(UC_LOGGER_INI_FILE_PATH));
+	GetPrivateProfileString(_T("Processes"), _T("Target"), _T(""), targetProcessNames, sizeof(targetProcessNames), g_iniFilePath);
 	if (_tcslen(targetProcessNames) == 0)
 	{
 		UC_DEBUG_SELF(_T("Target process names are not Specified."));
@@ -718,7 +748,7 @@ static void InitializeRoutes()
 {
 	TCHAR buffer[LARGE_BUFFER_SIZE];
 	ZeroMemory(buffer, sizeof(buffer));
-	DWORD size = GetPrivateProfileSection(_T("Routes"), buffer, _countof(buffer), _T(UC_LOGGER_INI_FILE_PATH));
+	DWORD size = GetPrivateProfileSection(_T("Routes"), buffer, _countof(buffer), g_iniFilePath);
 
 
 }
@@ -752,7 +782,7 @@ static bool ProcessIniKeyForFilters(TCHAR *pIniKey, void* pContext)
 	}
 	TCHAR* pFilters = (TCHAR*)pContext;
 
-	bool enable = (GetPrivateProfileInt(_T("Filters"), pIniKey, 0, _T(UC_LOGGER_INI_FILE_PATH)) == 0) ? false : true;
+	bool enable = (GetPrivateProfileInt(_T("Filters"), pIniKey, 0, g_iniFilePath) == 0) ? false : true;
 	UC_DEBUG_SELF(_T("enable=%d"), enable);
 	if (enable == false)
 	{
@@ -790,7 +820,7 @@ static HRESULT IsCaller(LPCTSTR filter, LPCTSTR filterEx, LPCTSTR file, int line
 	// Get value string
 	TCHAR valueBuffer[BUFSIZ];
 	ZeroMemory(valueBuffer, sizeof(valueBuffer));
-	DWORD length = GetPrivateProfileString(_T("Routes"), keyBuffer, _T(""), valueBuffer, sizeof(valueBuffer), _T(UC_LOGGER_INI_FILE_PATH));
+	DWORD length = GetPrivateProfileString(_T("Routes"), keyBuffer, _T(""), valueBuffer, sizeof(valueBuffer), g_iniFilePath);
 	UC_DEBUG_SELF(_T("Value=[%s]"), valueBuffer);
 	// 1/shr1090u64/Security.cpp/shr1090::CheckTagSecurity/127,...
 
@@ -881,7 +911,7 @@ static void OutputDebugStringToFile(LPCTSTR filter, LPCTSTR log)
 		// Get log file path
 		TCHAR tmpLogFilePath[MAX_PATH] = { 0 };
 		ZeroMemory(tmpLogFilePath, sizeof(tmpLogFilePath));
-		DWORD length = GetPrivateProfileString(_T("Output"), _T("File"), _T(""), tmpLogFilePath, sizeof(tmpLogFilePath), _T(UC_LOGGER_INI_FILE_PATH));
+		DWORD length = GetPrivateProfileString(_T("Output"), _T("File"), _T(""), tmpLogFilePath, sizeof(tmpLogFilePath), g_iniFilePath);
 		if (_tcslen(tmpLogFilePath) == 0)
 		{
 			//UC_DEBUG_SELF(_T("return, _tcslen(tmpLogFilePath) == 0"));
