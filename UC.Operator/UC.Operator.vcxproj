@@ -22,7 +22,7 @@
     <ProjectGuid>{1FA887AC-6D48-43ED-8499-59FD3C10A480}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>UCOperator</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,13 +41,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -111,7 +111,7 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(VSInstallDir)DIA SDK\bin\amd64\msdia140.dll" $(TargetDir)
-xcopy /D /Y "$(VCToolsRedistInstallDir)x64\Microsoft.VC142.CRT\vcruntime140_1.dll" $(TargetDir)</Command>
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -150,7 +150,7 @@ xcopy /D /Y "$(VCToolsRedistInstallDir)x64\Microsoft.VC142.CRT\vcruntime140_1.dl
     </Link>
     <PostBuildEvent>
       <Command>xcopy /D /Y "$(VSInstallDir)DIA SDK\bin\amd64\msdia140.dll" $(TargetDir)
-xcopy /D /Y "$(VCToolsRedistInstallDir)x64\Microsoft.VC142.CRT\vcruntime140_1.dll" $(TargetDir)</Command>
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -161,6 +161,7 @@ xcopy /D /Y "$(VCToolsRedistInstallDir)x64\Microsoft.VC142.CRT\vcruntime140_1.dl
     <ClInclude Include="Module.h" />
     <ClInclude Include="MsDiaHelper.h" />
     <ClInclude Include="Order.h" />
+    <ClInclude Include="Privilege.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="RVA.h" />
     <ClInclude Include="stdafx.h" />
@@ -171,6 +172,7 @@ xcopy /D /Y "$(VCToolsRedistInstallDir)x64\Microsoft.VC142.CRT\vcruntime140_1.dl
     <ClCompile Include="Module.cpp" />
     <ClCompile Include="MsDiaHelper.cpp" />
     <ClCompile Include="Order.cpp" />
+    <ClCompile Include="Privilege.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="RVA.cpp" />
     <ClCompile Include="stdafx.cpp" />
