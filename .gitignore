@@ -5,10 +5,14 @@
 *.suo
 /.vs
 *.user
+/.klocwork
 /Test/TestExe/x64
+/Test/TestDll/x64
 /UC.Agent/x64
 /UC.Logger/x64
 /UC.Operator/x64
 /UC.Tinker/x64
 /UC.Utils/x64
 /x64
+*.opendb
+*.db
