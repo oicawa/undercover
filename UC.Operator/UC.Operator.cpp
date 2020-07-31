@@ -15,6 +15,7 @@
 #include <UC.Logger\UC.Logger.h>
 #include <UC.Utils\UC.Utils.h>
 #include <UC.Utils\UC.CommandFunctionType.h>
+#include <UC.Utils\TextFile.h>
 
 #include "RVA.h"
 #include "Module.h"
@@ -32,39 +33,13 @@ void DisplayCommandList()
 {
 	UC_LOG(_T("Undercover"), _T("Display command list."));
 
-	CString commandDllsFilter;
-	UCUtils_GetBaseDirectory(commandDllsFilter);
-	const CString PREFIX(_T("UC.Cmd."));
-	const CString SUFFIX(_T(".dll"));
-	commandDllsFilter.AppendFormat(_T("\\UC.Commands\\%s*%s"), PREFIX, SUFFIX);
-
-	std::vector<CString> files;
-
-
-	WIN32_FIND_DATA win32fd;
-	HANDLE hFind = FindFirstFile(commandDllsFilter, &win32fd);
-	if (hFind == INVALID_HANDLE_VALUE)
+	CTextFile textFile;
+	textFile.Open(L".\\UC.Operator.txt");
+	CString line;
+	while (textFile.ReadLine(line))
 	{
-		_tprintf(_T("No Commands\n"));
-		return;
+		_tprintf(L"%s\n", line);
 	}
-
-	do
-	{
-		if (win32fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			continue;
-		}
-
-		CString dll(win32fd.cFileName);
-		int length = dll.GetLength() - PREFIX.GetLength() - SUFFIX.GetLength();
-		CString command = dll.Mid(PREFIX.GetLength(), length);
-		_tprintf(_T("%s\n"), (LPCTSTR)command);
-
-	}
-	while (FindNextFile(hFind, &win32fd));
-
-	FindClose(hFind);
 }
 
 std::map<CString, UCCommandFunction> g_functions;
