@@ -3,15 +3,15 @@ UC.Operator.exe RVA [InputParameter0 [InputhParameter1 [...]]]<Return>
 	Listup functions or convert parameters which are added RVA.
 	InputParameter is like the next format.
 		---------------------------------------------------
-		<ModuleName>.<exe|dll></?><FunctionName>[@<Number>]
+		<ModuleName>.<exe|dll></|?><FunctionName>[#<Number>]
 		---------------------------------------------------
 	<ex1> TestExe.exe?[FilterString]
 		Display functions in TestExe.exe. Use in the case that you want to know function name.
 		If [FilterString] is specified, the result list is filtered by it.
 	<ex2> TestExe.exe/TestFunction
 		Output string which is appended its RVA like 'TestExe.exe/TestFunction/0x0000000000001234' 
-	<ex3> TestExe.exe/TestFunction@2
-		@<Number> is needed if 'TestFunction' functions which have different signiture exists 2
+	<ex3> TestExe.exe/TestFunction#2
+		#<Number> is needed if 'TestFunction' functions which have different signiture exists 2
 		or more in TestExe.exe.
 		Please specify number as listed order.
 

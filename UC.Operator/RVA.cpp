@@ -86,7 +86,7 @@ static HRESULT AppendRVA(const CString& modulePath, const CString& functionName,
 
 		if (0 < ordinal)
 		{
-			output.AppendFormat(_T("@%d"), ordinal);
+			output.AppendFormat(_T("#%d"), ordinal);
 		}
 
 		if (RVA)
@@ -113,11 +113,11 @@ static bool ParseParameter(const CString& parameter, CString& moduleName, CStrin
 		LPCTSTR pDescription;
 	} Pattern;
 	Pattern patterns[] = {
-		{ std::wregex(LR"(^([^/?@\s]+)$)"), true, _T("{ModuleName}") },
-		{ std::wregex(LR"(^([^/?@\s]+)\?$)"), true, _T("{ModuleName}?") },
-		{ std::wregex(LR"(^([^/?@\s]+)\?([^/?@\s]+)$)"), true, _T("{ModuleName}?{PartOfFunctionName}") },
-		{ std::wregex(LR"(^([^/?@\s]+)/([^/?@\s]+)$)"), false, _T("{ModuleName}/{FunctionName}") },
-		{ std::wregex(LR"(^([^/?@\s]+)/([^/?@\s]+)@(\d+)$)"), false, _T("{ModuleName}/{FunctionName}@{Ordinal}") },
+		{ std::wregex(LR"(^([^/?#\s]+)$)"), true, _T("{ModuleName}") },
+		{ std::wregex(LR"(^([^/?#\s]+)\?$)"), true, _T("{ModuleName}?") },
+		{ std::wregex(LR"(^([^/?#\s]+)\?([^/?#\s]+)$)"), true, _T("{ModuleName}?{PartOfFunctionName}") },
+		{ std::wregex(LR"(^([^/?#\s]+)/([^/?#\s]+)$)"), false, _T("{ModuleName}/{FunctionName}") },
+		{ std::wregex(LR"(^([^/?#\s]+)/([^/?#\s]+)#(\d+)$)"), false, _T("{ModuleName}/{FunctionName}#{Ordinal}") },
 	};
 
 	Pattern *pPattern = nullptr;

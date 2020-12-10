@@ -91,9 +91,14 @@ void NamedPipeThread()
 
 		size_t sizeOfOutput = outputString.GetLength() * sizeof(TCHAR);
 		byte* pOutput = (byte*)(LPCTSTR)outputString;
+		output.reserve(sizeOfOutput);
 		for (size_t i = 0; i < sizeOfOutput; i++)
 		{
 			output.push_back(pOutput[i]);
+		}
+		for (size_t i = 0; i < sizeof(TCHAR); i++)
+		{
+			output.push_back(0x0);
 		}
 	});
 
